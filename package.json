@@ -1,0 +1,53 @@
+{
+  "name": "goomic",
+  "version": "1.0.0",
+  "description": "A mobile app combining Gemini and Copilot",
+  "main": "index.html",
+  "type": "module",
+  "scripts": {
+    "start": "node serve.js",
+    "build": "nwbuild -p ios64 .",
+    "lint": "eslint .",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+  },
+  "window": {
+    "title": "GooMic",
+    "icon": "icon.png",
+    "width": 800,
+    "height": 600,
+    "min_width": 400,
+    "min_height": 300,
+    "position": "center",
+    "fullscreen": true,
+    "resizable": true,
+    "always_on_top": false,
+    "frame": true,
+    "show_in_taskbar": true,
+    "show": true,
+    "toolbar": false,
+    "webview": true
+  },
+  "build": {
+    "appId": "com.goomic.app",
+    "productName": "GooMic",
+    "targets": [
+      "ios"
+    ],
+    "ios": {
+      "bundleId": "com.goomic.app",
+      "teamId": "YOUR_TEAM_ID",
+      "provisioningProfile": "YOUR_PROVISIONING_PROFILE"
+    }
+  },
+  "dependencies": {
+    "nw": "^0.80.0",
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@typescript-eslint/eslint-plugin": "^7.1.0",
+    "@typescript-eslint/parser": "^7.1.0",
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0"
+  }
+}
