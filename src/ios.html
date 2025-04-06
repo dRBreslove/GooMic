@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>GooMic - Gemini & Copilot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        .iframe-container {
+            flex: 1;
+            position: relative;
+            border: none;
+            overflow: hidden;
+        }
+
+        .iframe-container:first-child {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #fff;
+        }
+
+        .title {
+            position: absolute;
+            top: env(safe-area-inset-top);
+            left: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #333;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .controls {
+            position: absolute;
+            bottom: env(safe-area-inset-bottom, 20px);
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 12px;
+            border-radius: 24px;
+            z-index: 1002;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            width: 90%;
+            max-width: 600px;
+        }
+
+        .text-input {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+            resize: none;
+            min-height: 40px;
+            max-height: 120px;
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: #4285F4;
+        }
+
+        .text-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .control-button {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+            flex: 1;
+            max-width: 200px;
+        }
+
+        .control-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .control-button.active {
+            background: #4285F4;
+        }
+
+        .status {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 1004;
+            display: none;
+        }
+
+        .status.active {
+            display: block;
+        }
+
+        @media (orientation: landscape) {
+            .container {
+                flex-direction: row;
+            }
+            
+            .iframe-container:first-child {
+                border-bottom: none;
+                border-right: 1px solid rgba(255, 255, 255, 0.1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="iframe-container">
+            <div class="title">Gemini</div>
+            <iframe src="https://gemini.google.com" id="geminiFrame" nwdisable="true" nwfaketop="true"></iframe>
+        </div>
+        <div class="iframe-container">
+            <div class="title">Copilot</div>
+            <iframe src="https://copilot.microsoft.com" id="copilotFrame" nwdisable="true" nwfaketop="true"></iframe>
+        </div>
+        <div class="controls">
+            <textarea class="text-input" id="textInput" placeholder="Paste text here to send to AI assistants..."></textarea>
+            <div class="button-group">
+                <button class="control-button" id="sendToGemini">Send to Gemini</button>
+                <button class="control-button" id="sendToCopilot">Send to Copilot</button>
+            </div>
+        </div>
+        <div class="status" id="status"></div>
+    </div>
+
+    <script>
+        // Check authentication
+        function checkAuth() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+        }
+
+        // Add logout button
+        function addLogoutButton() {
+            const controls = document.querySelector('.controls');
+            const logoutButton = document.createElement('button');
+            logoutButton.className = 'control-button';
+            logoutButton.textContent = 'Logout';
+            logoutButton.style.background = '#dc3545';
+            logoutButton.onclick = () => {
+                localStorage.removeItem('authToken');
+                window.location.href = '/login.html';
+            };
+            controls.appendChild(logoutButton);
+        }
+
+        let ws = null;
+        let clientId = null;
+        let remoteClientId = null;
+
+        // Check authentication before initializing
+        checkAuth();
+        addLogoutButton();
+
+        // Connect to WebSocket server
+        function connectWebSocket() {
+            ws = new WebSocket('ws://localhost:8080');
+
+            ws.onmessage = async (event) => {
+                const data = JSON.parse(event.data);
+                
+                switch (data.type) {
+                    case 'clientId':
+                        clientId = data.id;
+                        updateStatus('Connected to server');
+                        break;
+                    case 'text':
+                        handleReceivedText(data.text);
+                        break;
+                }
+            };
+
+            ws.onclose = () => {
+                updateStatus('Disconnected from server');
+                setTimeout(connectWebSocket, 5000); // Reconnect after 5 seconds
+            };
+        }
+
+        // Handle received text
+        function handleReceivedText(text) {
+            // Copy the received text to clipboard
+            navigator.clipboard.writeText(text).then(() => {
+                updateStatus('Text copied to clipboard - paste it in the AI assistant');
+            }).catch(err => {
+                console.error('Failed to copy text:', err);
+                updateStatus('Failed to copy text to clipboard');
+            });
+        }
+
+        function updateStatus(message) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.classList.add('active');
+            setTimeout(() => {
+                status.classList.remove('active');
+            }, 3000);
+        }
+
+        // Initialize
+        document.getElementById('sendToGemini').addEventListener('click', () => {
+            const textInput = document.getElementById('textInput');
+            const text = textInput.value.trim();
+            
+            if (text) {
+                if (ws && ws.readyState === WebSocket.OPEN && remoteClientId) {
+                    ws.send(JSON.stringify({
+                        type: 'text',
+                        text: text,
+                        target: remoteClientId
+                    }));
+                    updateStatus('Text sent to Gemini');
+                    textInput.value = ''; // Clear the input
+                } else {
+                    updateStatus('Cannot send text: no connection');
+                }
+            } else {
+                updateStatus('Please enter some text');
+            }
+        });
+
+        document.getElementById('sendToCopilot').addEventListener('click', () => {
+            const textInput = document.getElementById('textInput');
+            const text = textInput.value.trim();
+            
+            if (text) {
+                if (ws && ws.readyState === WebSocket.OPEN && remoteClientId) {
+                    ws.send(JSON.stringify({
+                        type: 'text',
+                        text: text,
+                        target: remoteClientId
+                    }));
+                    updateStatus('Text sent to Copilot');
+                    textInput.value = ''; // Clear the input
+                } else {
+                    updateStatus('Cannot send text: no connection');
+                }
+            } else {
+                updateStatus('Please enter some text');
+            }
+        });
+
+        // Connect to WebSocket server
+        connectWebSocket();
+    </script>
+</body>
+</html> 

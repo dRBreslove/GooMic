@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>GooMic - AI Governance</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            gap: 1rem;
+            overflow-y: auto;
+        }
+
+        .chat-box {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 0.8rem;
+            border-radius: 12px;
+            margin: 0.5rem 0;
+        }
+
+        .user-message {
+            background: #4285F4;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .ai-message {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: env(safe-area-inset-bottom, 20px);
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 12px;
+            border-radius: 24px;
+            z-index: 1002;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            width: 90%;
+            max-width: 600px;
+        }
+
+        .text-input {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+            resize: none;
+            min-height: 40px;
+            max-height: 120px;
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: #4285F4;
+        }
+
+        .text-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .control-button {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+            flex: 1;
+            max-width: 200px;
+        }
+
+        .control-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .control-button.active {
+            background: #4285F4;
+        }
+
+        .status {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 1004;
+            display: none;
+        }
+
+        .status.active {
+            display: block;
+        }
+
+        .ai-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .ai-option {
+            flex: 1;
+            padding: 8px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .ai-option.active {
+            background: #4285F4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="chat-container">
+            <div class="ai-selector">
+                <div class="ai-option active" data-ai="gemini">Gemini</div>
+                <div class="ai-option" data-ai="copilot">Copilot</div>
+            </div>
+            <div class="chat-box" id="chatBox">
+                <!-- Messages will be added here -->
+            </div>
+        </div>
+        <div class="controls">
+            <textarea class="text-input" id="textInput" placeholder="Type your message here..."></textarea>
+            <div class="button-group">
+                <button class="control-button" id="sendButton">Send</button>
+            </div>
+        </div>
+        <div class="status" id="status"></div>
+    </div>
+
+    <script>
+        // Check authentication
+        function checkAuth() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+        }
+
+        // Add logout button
+        function addLogoutButton() {
+            const controls = document.querySelector('.controls');
+            const logoutButton = document.createElement('button');
+            logoutButton.className = 'control-button';
+            logoutButton.textContent = 'Logout';
+            logoutButton.style.background = '#dc3545';
+            logoutButton.onclick = () => {
+                localStorage.removeItem('authToken');
+                window.location.href = '/login.html';
+            };
+            controls.appendChild(logoutButton);
+        }
+
+        let ws = null;
+        let clientId = null;
+        let remoteClientId = null;
+        let currentAI = 'gemini';
+
+        // Initialize WebSocket connection
+        function connectWebSocket() {
+            ws = new WebSocket('ws://localhost:8080');
+
+            ws.onmessage = async (event) => {
+                const data = JSON.parse(event.data);
+                
+                switch (data.type) {
+                    case 'clientId':
+                        clientId = data.id;
+                        updateStatus('Connected to server');
+                        break;
+                    case 'text':
+                        addMessage(data.text, 'ai');
+                        break;
+                }
+            };
+
+            ws.onclose = () => {
+                updateStatus('Disconnected from server');
+                setTimeout(connectWebSocket, 5000); // Reconnect after 5 seconds
+            };
+        }
+
+        // Add message to chat
+        function addMessage(text, sender) {
+            const chatBox = document.getElementById('chatBox');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            messageDiv.textContent = text;
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function updateStatus(message) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.classList.add('active');
+            setTimeout(() => {
+                status.classList.remove('active');
+            }, 3000);
+        }
+
+        // Handle AI selection
+        document.querySelectorAll('.ai-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.ai-option').forEach(opt => opt.classList.remove('active'));
+                option.classList.add('active');
+                currentAI = option.dataset.ai;
+                updateStatus(`Switched to ${currentAI}`);
+            });
+        });
+
+        // Handle send button
+        document.getElementById('sendButton').addEventListener('click', () => {
+            const textInput = document.getElementById('textInput');
+            const text = textInput.value.trim();
+            
+            if (text) {
+                if (ws && ws.readyState === WebSocket.OPEN && remoteClientId) {
+                    addMessage(text, 'user');
+                    ws.send(JSON.stringify({
+                        type: 'text',
+                        text: text,
+                        target: remoteClientId,
+                        ai: currentAI
+                    }));
+                    textInput.value = ''; // Clear the input
+                } else {
+                    updateStatus('Cannot send text: no connection');
+                }
+            } else {
+                updateStatus('Please enter some text');
+            }
+        });
+
+        // Handle enter key
+        document.getElementById('textInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                document.getElementById('sendButton').click();
+            }
+        });
+
+        // Check authentication before initializing
+        checkAuth();
+        addLogoutButton();
+
+        // Connect to WebSocket server
+        connectWebSocket();
+    </script>
+</body>
+</html> 

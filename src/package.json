@@ -1,0 +1,61 @@
+{
+  "name": "goomic",
+  "version": "1.0.0",
+  "description": "AI Governance Platform integrating Gemini and Copilot",
+  "main": "src/ios.html",
+  "scripts": {
+    "start": "node src/server.js",
+    "serve": "npx http-server src -p 3000",
+    "dev": "concurrently \"npm run start\" \"npm run serve\"",
+    "build:ios": "nwbuild --platform ios --arch arm64 ."
+  },
+  "dependencies": {
+    "@capacitor/cli": "^7.2.0",
+    "@capacitor/core": "^7.2.0",
+    "@capacitor/ios": "^7.2.0",
+    "uuid": "^9.0.1",
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "http-server": "^14.1.1",
+    "nw": "^0.80.0",
+    "typescript": "^5.8.3"
+  },
+  "window": {
+    "title": "GooMic - AI Governance",
+    "icon": "icon.png",
+    "width": 1024,
+    "height": 768,
+    "min_width": 800,
+    "min_height": 600,
+    "position": "center",
+    "fullscreen": true,
+    "resizable": true,
+    "always_on_top": false,
+    "frame": true,
+    "show_in_taskbar": true,
+    "show": true,
+    "toolbar": false,
+    "webview": true,
+    "transparent": false,
+    "background_color": "#ffffff"
+  },
+  "build": {
+    "appId": "com.goomic.app",
+    "productName": "GooMic",
+    "targets": [
+      "ios"
+    ],
+    "ios": {
+      "bundleId": "com.goomic.app",
+      "teamId": "YOUR_TEAM_ID",
+      "provisioningProfile": "YOUR_PROVISIONING_PROFILE",
+      "entitlements": {
+        "com.apple.security.network.client": true,
+        "com.apple.security.network.server": true,
+        "com.apple.security.files.user-selected.read-write": true
+      }
+    }
+  }
+}
