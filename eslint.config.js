@@ -17,6 +17,18 @@ export default [
             },
             globals: {
                 console: 'readonly',
+                require: 'readonly',
+                module: 'readonly',
+                process: 'readonly',
+                setTimeout: 'readonly',
+                jest: 'readonly',
+                describe: 'readonly',
+                test: 'readonly',
+                expect: 'readonly',
+                beforeAll: 'readonly',
+                afterAll: 'readonly',
+                beforeEach: 'readonly',
+                afterEach: 'readonly',
             },
         },
         plugins: {

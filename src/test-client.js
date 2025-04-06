@@ -1,14 +1,14 @@
 const WebSocket = require('ws');
 
 class WebSocketTestClient {
-    constructor(url = 'ws://localhost:8080') {
+    constructor (url = 'ws://localhost:8080') {
         this.url = url;
         this.ws = null;
         this.clientId = null;
         this.remoteClientId = null;
     }
 
-    connect() {
+    connect () {
         return new Promise((resolve, reject) => {
             this.ws = new WebSocket(this.url);
 
@@ -22,13 +22,13 @@ class WebSocketTestClient {
                 console.log('\nReceived message:', message);
 
                 switch (message.type) {
-                    case 'clientId':
-                        this.clientId = message.id;
-                        console.log('Got client ID:', this.clientId);
-                        break;
-                    case 'text':
-                        console.log('AI Response:', message.text);
-                        break;
+                case 'clientId':
+                    this.clientId = message.id;
+                    console.log('Got client ID:', this.clientId);
+                    break;
+                case 'text':
+                    console.log('AI Response:', message.text);
+                    break;
                 }
             });
 
@@ -43,7 +43,7 @@ class WebSocketTestClient {
         });
     }
 
-    sendMessage(text, aiType) {
+    sendMessage (text, aiType) {
         if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
             throw new Error('WebSocket is not connected');
         }
@@ -52,14 +52,14 @@ class WebSocketTestClient {
             type: 'text',
             text: text,
             target: this.clientId, // Send to self for testing
-            ai: aiType
+            ai: aiType,
         };
 
         console.log(`\nSending message to ${aiType}:`, text);
         this.ws.send(JSON.stringify(message));
     }
 
-    close() {
+    close () {
         if (this.ws) {
             this.ws.close();
         }
@@ -67,32 +67,32 @@ class WebSocketTestClient {
 }
 
 // Test function
-async function runTests() {
+async function runTests () {
     const client = new WebSocketTestClient();
-    
+
     try {
         // Connect to server
         await client.connect();
-        
+
         // Test Gemini
         console.log('\n=== Testing Gemini ===');
         await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for connection
         client.sendMessage('What is the capital of France?', 'gemini');
-        
+
         // Wait for response
         await new Promise(resolve => setTimeout(resolve, 5000));
-        
+
         // Test Copilot
         console.log('\n=== Testing Copilot ===');
         client.sendMessage('What is the largest planet in our solar system?', 'copilot');
-        
+
         // Wait for response
         await new Promise(resolve => setTimeout(resolve, 5000));
-        
+
         // Close connection
         client.close();
         console.log('\nTests completed');
-        
+
     } catch (error) {
         console.error('Test failed:', error);
         client.close();
@@ -100,4 +100,4 @@ async function runTests() {
 }
 
 // Run the tests
-runTests(); 
+runTests();

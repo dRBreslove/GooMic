@@ -1,5 +1,7 @@
 # GooMic - AI Governance Platform
 
+(https://house-of-ai-representatives.com)[https://house-of-ai-representatives.com]
+
 A web-based platform that enables seamless communication between AI assistants (Gemini and Azure OpenAI) for enhanced AI governance and collaboration.
 
 ## Features

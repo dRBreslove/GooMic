@@ -7,5 +7,5 @@ module.exports = {
     modulePathIgnorePatterns: ['<rootDir>/ios/'],
     testTimeout: 30000,
     transform: {},
-    moduleFileExtensions: ['js', 'json', 'node']
+    moduleFileExtensions: ['js', 'json', 'node'],
 };

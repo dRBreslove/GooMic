@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "AI Governance Platform",
   "main": "src/index.html",
+  "type": "module",
   "scripts": {
     "start": "nw .",
     "server": "node src/server.js",
@@ -21,6 +22,8 @@
     "@types/jest": "^29.5.12",
     "@types/node": "^20.11.24",
     "@types/ws": "^8.5.10",
+    "@typescript-eslint/eslint-plugin": "^8.29.0",
+    "@typescript-eslint/parser": "^8.29.0",
     "concurrently": "^8.2.2",
     "eslint": "^8.57.0",
     "jest": "^29.7.0",
