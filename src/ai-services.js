@@ -78,4 +78,6 @@ async function getAIResponse (prompt, aiType) {
 
 module.exports = {
     getAIResponse,
+    getGeminiResponse,
+    getAzureOpenAIResponse
 };

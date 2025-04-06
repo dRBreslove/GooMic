@@ -25,69 +25,115 @@
             display: flex;
             height: 100vh;
             flex-direction: column;
+            gap: 1px;
         }
 
-        .iframe-container {
+        .ai-panel {
             flex: 1;
-            position: relative;
-            border: none;
-            overflow: hidden;
-        }
-
-        .iframe-container:first-child {
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            background: #fff;
-        }
-
-        .title {
-            position: absolute;
-            top: env(safe-area-inset-top);
-            left: 10px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 14px;
-            color: #333;
-            z-index: 1000;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-        }
-
-        .controls {
-            position: absolute;
-            bottom: env(safe-area-inset-bottom, 20px);
-            left: 50%;
-            transform: translateX(-50%);
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            background: rgba(0, 0, 0, 0.8);
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 16px;
+            position: relative;
+            min-width: 300px;
+            max-width: 400px;
+            height: 100%;
+        }
+
+        .ai-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
             padding: 12px;
-            border-radius: 24px;
-            z-index: 1002;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            width: 90%;
-            max-width: 600px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .message {
+            padding: 8px 12px;
+            border-radius: 8px;
+            max-width: 80%;
+            word-wrap: break-word;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .message.user {
+            background: #4285F4;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+
+        .message.ai {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+
+        .transfer-arrow {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: #4285F4;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            z-index: 100;
+            transition: background 0.2s;
+            bottom: 20px;
+        }
+
+        .transfer-arrow:hover {
+            background: #3367d6;
+        }
+
+        .transfer-arrow.left {
+            left: 20px;
+            transform: rotate(180deg);
+        }
+
+        .transfer-arrow.right {
+            right: 20px;
+            transform: rotate(0deg);
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+            padding: 5px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin-top: 5px;
         }
 
         .text-input {
-            width: 100%;
-            padding: 8px 12px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 4px;
             background: rgba(255, 255, 255, 0.1);
             color: white;
-            font-size: 14px;
             resize: none;
-            min-height: 40px;
-            max-height: 120px;
+            height: 40px;
+            font-family: inherit;
+            font-size: 14px;
         }
 
         .text-input:focus {
@@ -96,47 +142,36 @@
         }
 
         .text-input::placeholder {
-            color: rgba(255, 255, 255, 0.5);
+            color: #999;
         }
 
-        .button-group {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-        }
-
-        .control-button {
+        .send-button {
             padding: 8px 16px;
-            border-radius: 20px;
             border: none;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            font-size: 14px;
-            cursor: pointer;
-            transition: background 0.2s;
-            flex: 1;
-            max-width: 200px;
-        }
-
-        .control-button:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        .control-button.active {
+            border-radius: 4px;
             background: #4285F4;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+
+        .send-button:hover {
+            background: #3367d6;
         }
 
         .status {
-            position: absolute;
-            bottom: 10px;
+            position: fixed;
+            bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
             background: rgba(0, 0, 0, 0.7);
             color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            z-index: 1004;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 1000;
             display: none;
         }
 
@@ -144,131 +179,394 @@
             display: block;
         }
 
-        @media (orientation: landscape) {
+        @media (max-width: 768px) {
             .container {
-                flex-direction: row;
+                flex-direction: column;
             }
             
-            .iframe-container:first-child {
-                border-bottom: none;
-                border-right: 1px solid rgba(255, 255, 255, 0.1);
+            .ai-panel {
+                height: 33.33vh;
             }
+
+            .transfer-arrow {
+                display: none;
+            }
+        }
+
+        .info-button {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #4285F4;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            z-index: 1000;
+            transition: background 0.2s;
+        }
+
+        .info-button:hover {
+            background: #3367d6;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            max-width: 300px;
+            z-index: 1001;
+            display: none;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .tooltip.active {
+            display: block;
+        }
+
+        .tooltip::before {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border: 6px solid transparent;
+            border-bottom-color: rgba(0, 0, 0, 0.8);
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .tooltip.top {
+            bottom: 100%;
+            margin-bottom: 12px;
+        }
+
+        .tooltip.bottom {
+            top: 100%;
+            margin-top: 12px;
+        }
+
+        .tooltip.left {
+            right: 100%;
+            margin-right: 12px;
+        }
+
+        .tooltip.right {
+            left: 100%;
+            margin-left: 12px;
+        }
+
+        .tooltip.top::before {
+            bottom: -12px;
+            top: auto;
+            border-bottom-color: transparent;
+            border-top-color: rgba(0, 0, 0, 0.8);
+        }
+
+        .tooltip.left::before {
+            left: auto;
+            right: -12px;
+            transform: translateY(-50%);
+            border-bottom-color: transparent;
+            border-left-color: rgba(0, 0, 0, 0.8);
+        }
+
+        .tooltip.right::before {
+            left: -12px;
+            transform: translateY(-50%);
+            border-bottom-color: transparent;
+            border-right-color: rgba(0, 0, 0, 0.8);
+        }
+
+        .ai-selection {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 5px 0;
+            padding: 5px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+
+        .radio-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            color: #fff;
+            font-size: 14px;
+            padding: 6px 12px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .radio-label:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .radio-label input[type="radio"] {
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .radio-label input[type="radio"]:checked + span {
+            color: #4285F4;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="iframe-container">
-            <div class="title">Gemini</div>
-            <iframe src="https://gemini.google.com" id="geminiFrame"></iframe>
+        <div class="ai-panel">
+            <div class="ai-title">Gemini</div>
+            <div class="info-button" id="geminiInfo">i</div>
+            <div class="tooltip" id="geminiTooltip">
+                Google's Gemini AI model. Click the arrow to transfer messages to Copilot.
+            </div>
+            <div class="chat-container" id="geminiChat"></div>
+            <div class="transfer-arrow right" id="geminiToCopilot">→</div>
         </div>
-        <div class="iframe-container">
-            <div class="title">Copilot</div>
-            <iframe src="https://copilot.microsoft.com" id="copilotFrame"></iframe>
-        </div>
-        <div class="controls">
-            <textarea class="text-input" id="textInput" placeholder="Paste text here to send to AI assistants..."></textarea>
-            <div class="button-group">
-                <button class="control-button" id="sendToGemini">Send to Gemini</button>
-                <button class="control-button" id="sendToCopilot">Send to Copilot</button>
+        
+        <div class="ai-panel">
+            <div class="ai-title">GooMic</div>
+            <div class="info-button" id="goomicInfo">i</div>
+            <div class="tooltip" id="goomicTooltip">
+                Your central control panel. Type a message and send it to both AIs simultaneously.
+            </div>
+            <div class="chat-container" id="goomicChat"></div>
+            <div class="ai-selection">
+                <label class="radio-label">
+                    <input type="radio" name="aiSelection" value="both" checked>
+                    <span>Both AIs</span>
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="aiSelection" value="gemini">
+                    <span>Gemini Only</span>
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="aiSelection" value="copilot">
+                    <span>Copilot Only</span>
+                </label>
+            </div>
+            <div class="input-container">
+                <textarea class="text-input" id="textInput" placeholder="Type your message here..."></textarea>
+                <button class="send-button" id="sendButton">Send to Both AIs</button>
             </div>
         </div>
-        <div class="status" id="status"></div>
+        
+        <div class="ai-panel">
+            <div class="ai-title">Copilot</div>
+            <div class="info-button" id="copilotInfo">i</div>
+            <div class="tooltip" id="copilotTooltip">
+                Microsoft's Copilot AI model. Click the arrow to transfer messages to Gemini.
+            </div>
+            <div class="chat-container" id="copilotChat"></div>
+            <div class="transfer-arrow left" id="copilotToGemini">←</div>
+        </div>
     </div>
+    <div class="status" id="status"></div>
 
     <script>
         let ws = null;
         let clientId = null;
-        let remoteClientId = null;
 
         // Connect to WebSocket server
         function connectWebSocket() {
             ws = new WebSocket('ws://localhost:8080');
 
-            ws.onmessage = async (event) => {
+            ws.onopen = () => {
+                console.log('Connected to WebSocket server');
+                updateStatus('Connected to server');
+            };
+
+            ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
-                
-                switch (data.type) {
-                    case 'clientId':
-                        clientId = data.id;
-                        updateStatus('Connected to server');
-                        break;
-                    case 'text':
-                        handleReceivedText(data.text);
-                        break;
+                console.log('Received message:', data);
+
+                if (data.type === 'clientId') {
+                    clientId = data.id;
+                } else if (data.type === 'ai_response') {
+                    const { ai, response } = data;
+                    if (ai === 'gemini') {
+                        addMessageToChat('geminiChat', response, 'ai');
+                    } else if (ai === 'copilot') {
+                        addMessageToChat('copilotChat', response, 'ai');
+                    }
                 }
             };
 
-            ws.onclose = () => {
-                updateStatus('Disconnected from server');
-                setTimeout(connectWebSocket, 5000); // Reconnect after 5 seconds
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                updateStatus('Connection error. Retrying...');
+                setTimeout(connectWebSocket, 5000);
             };
-        }
 
-        // Handle received text
-        function handleReceivedText(text) {
-            // Copy the received text to clipboard
-            navigator.clipboard.writeText(text).then(() => {
-                updateStatus('Text copied to clipboard - paste it in the AI assistant');
-            }).catch(err => {
-                console.error('Failed to copy text:', err);
-                updateStatus('Failed to copy text to clipboard');
-            });
+            ws.onclose = () => {
+                console.log('WebSocket connection closed');
+                updateStatus('Disconnected. Retrying...');
+                setTimeout(connectWebSocket, 5000);
+            };
         }
 
         function updateStatus(message) {
             const status = document.getElementById('status');
             status.textContent = message;
             status.classList.add('active');
-            setTimeout(() => {
-                status.classList.remove('active');
-            }, 3000);
+            setTimeout(() => status.classList.remove('active'), 3000);
         }
 
-        // Initialize
-        document.getElementById('sendToGemini').addEventListener('click', () => {
-            const textInput = document.getElementById('textInput');
-            const text = textInput.value.trim();
+        function addMessageToChat(chatId, text, type) {
+            const chat = document.getElementById(chatId);
+            const message = document.createElement('div');
+            message.classList.add('message', type);
+            message.textContent = text;
+            chat.appendChild(message);
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        function sendMessage(ai, text) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                updateStatus('Not connected to server');
+                return;
+            }
+
+            ws.send(JSON.stringify({
+                type: 'text',
+                ai: ai,
+                text: text
+            }));
+        }
+
+        // Handle send button click
+        document.getElementById('sendButton').addEventListener('click', () => {
+            const message = document.getElementById('textInput').value.trim();
+            if (!message) return;
+
+            const selectedAI = document.querySelector('input[name="aiSelection"]:checked').value;
             
-            if (text) {
-                if (ws && ws.readyState === WebSocket.OPEN && remoteClientId) {
-                    ws.send(JSON.stringify({
-                        type: 'text',
-                        text: text,
-                        target: remoteClientId
-                    }));
-                    updateStatus('Text sent to Gemini');
-                    textInput.value = ''; // Clear the input
-                } else {
-                    updateStatus('Cannot send text: no connection');
-                }
-            } else {
-                updateStatus('Please enter some text');
+            // Add message to GooMic chat
+            addMessageToChat('goomicChat', message, 'user');
+            document.getElementById('textInput').value = '';
+
+            // Send to selected AI(s)
+            switch(selectedAI) {
+                case 'both':
+                    sendMessage('gemini', message);
+                    sendMessage('copilot', message);
+                    break;
+                case 'gemini':
+                    sendMessage('gemini', message);
+                    break;
+                case 'copilot':
+                    sendMessage('copilot', message);
+                    break;
             }
         });
 
-        document.getElementById('sendToCopilot').addEventListener('click', () => {
-            const textInput = document.getElementById('textInput');
-            const text = textInput.value.trim();
-            
-            if (text) {
-                if (ws && ws.readyState === WebSocket.OPEN && remoteClientId) {
-                    ws.send(JSON.stringify({
-                        type: 'text',
-                        text: text,
-                        target: remoteClientId
-                    }));
-                    updateStatus('Text sent to Copilot');
-                    textInput.value = ''; // Clear the input
-                } else {
-                    updateStatus('Cannot send text: no connection');
-                }
-            } else {
-                updateStatus('Please enter some text');
+        // Handle Enter key in text input
+        document.getElementById('textInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                document.getElementById('sendButton').click();
             }
         });
 
-        // Connect to WebSocket server
+        // Update transfer message handlers
+        document.getElementById('geminiToCopilot').addEventListener('click', () => {
+            const geminiChat = document.getElementById('geminiChat');
+            const lastMessage = geminiChat.lastElementChild;
+            if (lastMessage && lastMessage.classList.contains('ai')) {
+                const text = lastMessage.textContent;
+                addMessageToChat('copilotChat', text, 'ai');
+            }
+        });
+
+        document.getElementById('copilotToGemini').addEventListener('click', () => {
+            const copilotChat = document.getElementById('copilotChat');
+            const lastMessage = copilotChat.lastElementChild;
+            if (lastMessage && lastMessage.classList.contains('ai')) {
+                const text = lastMessage.textContent;
+                addMessageToChat('geminiChat', text, 'ai');
+            }
+        });
+
+        // Tooltip functionality
+        function setupTooltip(buttonId, tooltipId, position = 'bottom') {
+            const button = document.getElementById(buttonId);
+            const tooltip = document.getElementById(tooltipId);
+            let isVisible = false;
+
+            button.addEventListener('click', (e) => {
+                e.stopPropagation();
+                isVisible = !isVisible;
+                tooltip.classList.toggle('active');
+                tooltip.classList.remove('top', 'bottom', 'left', 'right');
+                tooltip.classList.add(position);
+
+                // Position the tooltip
+                const buttonRect = button.getBoundingClientRect();
+                const tooltipRect = tooltip.getBoundingClientRect();
+                
+                switch(position) {
+                    case 'top':
+                        tooltip.style.top = `${buttonRect.top - tooltipRect.height - 12}px`;
+                        break;
+                    case 'bottom':
+                        tooltip.style.top = `${buttonRect.bottom + 12}px`;
+                        break;
+                    case 'left':
+                        tooltip.style.left = `${buttonRect.left - tooltipRect.width - 12}px`;
+                        break;
+                    case 'right':
+                        tooltip.style.left = `${buttonRect.right + 12}px`;
+                        break;
+                }
+            });
+
+            // Close tooltip when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!button.contains(e.target) && !tooltip.contains(e.target)) {
+                    isVisible = false;
+                    tooltip.classList.remove('active');
+                }
+            });
+        }
+
+        // Setup tooltips
+        setupTooltip('geminiInfo', 'geminiTooltip', 'bottom');
+        setupTooltip('goomicInfo', 'goomicTooltip', 'bottom');
+        setupTooltip('copilotInfo', 'copilotTooltip', 'bottom');
+
+        // Update send button text based on selection
+        const aiSelection = document.querySelectorAll('input[name="aiSelection"]');
+        const sendButton = document.getElementById('sendButton');
+
+        aiSelection.forEach(radio => {
+            radio.addEventListener('change', () => {
+                switch(radio.value) {
+                    case 'both':
+                        sendButton.textContent = 'Send to Both AIs';
+                        break;
+                    case 'gemini':
+                        sendButton.textContent = 'Send to Gemini';
+                        break;
+                    case 'copilot':
+                        sendButton.textContent = 'Send to Copilot';
+                        break;
+                }
+            });
+        });
+
+        // Initial connection
         connectWebSocket();
     </script>
 </body>

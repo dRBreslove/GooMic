@@ -24,66 +24,97 @@
         .container {
             display: flex;
             height: 100vh;
-            flex-direction: column;
+            flex-direction: row;
+            gap: 1px;
         }
 
-        .iframe-container {
+        .ai-panel {
             flex: 1;
-            position: relative;
-            border: none;
-            overflow: hidden;
-        }
-
-        .iframe-container:first-child {
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
+            display: flex;
+            flex-direction: column;
             background: #fff;
+            position: relative;
         }
 
-        .title {
-            position: absolute;
-            top: env(safe-area-inset-top);
-            left: 10px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 14px;
-            color: #333;
-            z-index: 1000;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+        .ai-title {
+            padding: 12px;
+            background: #f5f5f5;
+            font-weight: 500;
+            text-align: center;
+            border-bottom: 1px solid #e0e0e0;
         }
 
-        .controls {
-            position: absolute;
-            bottom: env(safe-area-inset-bottom, 20px);
-            left: 50%;
-            transform: translateX(-50%);
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
             display: flex;
             flex-direction: column;
             gap: 12px;
-            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .message {
+            max-width: 80%;
             padding: 12px;
-            border-radius: 24px;
-            z-index: 1002;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            width: 90%;
-            max-width: 600px;
+            border-radius: 12px;
+            margin: 4px 0;
+            word-wrap: break-word;
+        }
+
+        .message.user {
+            background: #e3f2fd;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.ai {
+            background: #f5f5f5;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .transfer-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            background: #4285F4;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            z-index: 100;
+            transition: background 0.2s;
+        }
+
+        .transfer-arrow:hover {
+            background: #3367d6;
+        }
+
+        .transfer-arrow.left {
+            right: -20px;
+        }
+
+        .transfer-arrow.right {
+            left: -20px;
+        }
+
+        .input-container {
+            padding: 16px;
+            background: #f5f5f5;
+            border-top: 1px solid #e0e0e0;
         }
 
         .text-input {
             width: 100%;
-            padding: 8px 12px;
+            padding: 12px;
             border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
+            border: 1px solid #e0e0e0;
+            background: white;
+            color: #333;
             font-size: 14px;
             resize: none;
             min-height: 40px;
@@ -96,47 +127,37 @@
         }
 
         .text-input::placeholder {
-            color: rgba(255, 255, 255, 0.5);
+            color: #999;
         }
 
-        .button-group {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-        }
-
-        .control-button {
-            padding: 8px 16px;
-            border-radius: 20px;
+        .send-button {
+            margin-top: 8px;
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
             border: none;
-            background: rgba(255, 255, 255, 0.2);
+            background: #4285F4;
             color: white;
             font-size: 14px;
             cursor: pointer;
             transition: background 0.2s;
-            flex: 1;
-            max-width: 200px;
         }
 
-        .control-button:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        .control-button.active {
-            background: #4285F4;
+        .send-button:hover {
+            background: #3367d6;
         }
 
         .status {
-            position: absolute;
-            bottom: 10px;
+            position: fixed;
+            bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
             background: rgba(0, 0, 0, 0.7);
             color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            z-index: 1004;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 1000;
             display: none;
         }
 
@@ -144,42 +165,49 @@
             display: block;
         }
 
-        @media (orientation: landscape) {
+        @media (max-width: 768px) {
             .container {
-                flex-direction: row;
+                flex-direction: column;
             }
             
-            .iframe-container:first-child {
-                border-bottom: none;
-                border-right: 1px solid rgba(255, 255, 255, 0.1);
+            .ai-panel {
+                height: 33.33vh;
+            }
+
+            .transfer-arrow {
+                display: none;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="iframe-container">
-            <div class="title">Gemini</div>
-            <iframe src="https://gemini.google.com" id="geminiFrame"></iframe>
+        <div class="ai-panel">
+            <div class="ai-title">Gemini</div>
+            <div class="chat-container" id="geminiChat"></div>
+            <div class="transfer-arrow right" id="geminiToCopilot">→</div>
         </div>
-        <div class="iframe-container">
-            <div class="title">Copilot</div>
-            <iframe src="https://copilot.microsoft.com" id="copilotFrame"></iframe>
-        </div>
-        <div class="controls">
-            <textarea class="text-input" id="textInput" placeholder="Paste text here to send to AI assistants..."></textarea>
-            <div class="button-group">
-                <button class="control-button" id="sendToGemini">Send to Gemini</button>
-                <button class="control-button" id="sendToCopilot">Send to Copilot</button>
+        
+        <div class="ai-panel">
+            <div class="ai-title">GooMic</div>
+            <div class="chat-container" id="goomicChat"></div>
+            <div class="input-container">
+                <textarea class="text-input" id="textInput" placeholder="Type your message here..."></textarea>
+                <button class="send-button" id="sendButton">Send to Both AIs</button>
             </div>
         </div>
-        <div class="status" id="status"></div>
+        
+        <div class="ai-panel">
+            <div class="ai-title">Copilot</div>
+            <div class="chat-container" id="copilotChat"></div>
+            <div class="transfer-arrow left" id="copilotToGemini">←</div>
+        </div>
     </div>
+    <div class="status" id="status"></div>
 
     <script>
         let ws = null;
         let clientId = null;
-        let remoteClientId = null;
 
         // Connect to WebSocket server
         function connectWebSocket() {
@@ -194,81 +222,98 @@
                         updateStatus('Connected to server');
                         break;
                     case 'text':
-                        handleReceivedText(data.text);
+                        handleReceivedText(data.text, data.aiType);
                         break;
                 }
             };
 
             ws.onclose = () => {
                 updateStatus('Disconnected from server');
-                setTimeout(connectWebSocket, 5000); // Reconnect after 5 seconds
+                setTimeout(connectWebSocket, 3000);
             };
-        }
-
-        // Handle received text
-        function handleReceivedText(text) {
-            // Copy the received text to clipboard
-            navigator.clipboard.writeText(text).then(() => {
-                updateStatus('Text copied to clipboard - paste it in the AI assistant');
-            }).catch(err => {
-                console.error('Failed to copy text:', err);
-                updateStatus('Failed to copy text to clipboard');
-            });
         }
 
         function updateStatus(message) {
             const status = document.getElementById('status');
             status.textContent = message;
             status.classList.add('active');
-            setTimeout(() => {
-                status.classList.remove('active');
-            }, 3000);
+            setTimeout(() => status.classList.remove('active'), 3000);
         }
 
-        // Initialize
-        document.getElementById('sendToGemini').addEventListener('click', () => {
-            const textInput = document.getElementById('textInput');
-            const text = textInput.value.trim();
-            
+        function addMessage(text, isUser, aiType) {
+            const chatContainer = document.getElementById(`${aiType}Chat`);
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'ai'}`;
+            messageDiv.textContent = text;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function handleReceivedText(text, aiType) {
+            addMessage(text, false, aiType);
+        }
+
+        function sendMessage(text) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                updateStatus('Not connected to server');
+                return;
+            }
+
+            // Send to both AIs
+            ws.send(JSON.stringify({
+                type: 'text',
+                text: text,
+                aiType: 'gemini'
+            }));
+
+            ws.send(JSON.stringify({
+                type: 'text',
+                text: text,
+                aiType: 'copilot'
+            }));
+
+            addMessage(text, true, 'goomic');
+        }
+
+        // Event Listeners
+        document.getElementById('sendButton').addEventListener('click', () => {
+            const text = document.getElementById('textInput').value.trim();
             if (text) {
-                if (ws && ws.readyState === WebSocket.OPEN && remoteClientId) {
-                    ws.send(JSON.stringify({
-                        type: 'text',
-                        text: text,
-                        target: remoteClientId
-                    }));
-                    updateStatus('Text sent to Gemini');
-                    textInput.value = ''; // Clear the input
-                } else {
-                    updateStatus('Cannot send text: no connection');
-                }
-            } else {
-                updateStatus('Please enter some text');
+                sendMessage(text);
+                document.getElementById('textInput').value = '';
             }
         });
 
-        document.getElementById('sendToCopilot').addEventListener('click', () => {
-            const textInput = document.getElementById('textInput');
-            const text = textInput.value.trim();
-            
-            if (text) {
-                if (ws && ws.readyState === WebSocket.OPEN && remoteClientId) {
-                    ws.send(JSON.stringify({
-                        type: 'text',
-                        text: text,
-                        target: remoteClientId
-                    }));
-                    updateStatus('Text sent to Copilot');
-                    textInput.value = ''; // Clear the input
-                } else {
-                    updateStatus('Cannot send text: no connection');
+        document.getElementById('textInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                const text = document.getElementById('textInput').value.trim();
+                if (text) {
+                    sendMessage(text);
+                    document.getElementById('textInput').value = '';
                 }
-            } else {
-                updateStatus('Please enter some text');
             }
         });
 
-        // Connect to WebSocket server
+        document.getElementById('geminiToCopilot').addEventListener('click', () => {
+            const geminiChat = document.getElementById('geminiChat');
+            const lastMessage = geminiChat.lastElementChild;
+            if (lastMessage && lastMessage.classList.contains('ai')) {
+                const text = lastMessage.textContent;
+                addMessage(text, false, 'copilot');
+            }
+        });
+
+        document.getElementById('copilotToGemini').addEventListener('click', () => {
+            const copilotChat = document.getElementById('copilotChat');
+            const lastMessage = copilotChat.lastElementChild;
+            if (lastMessage && lastMessage.classList.contains('ai')) {
+                const text = lastMessage.textContent;
+                addMessage(text, false, 'gemini');
+            }
+        });
+
+        // Initial connection
         connectWebSocket();
     </script>
 </body>
