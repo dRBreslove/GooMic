@@ -1,24 +1,24 @@
-# GooMic - AI Governance Platform
+# GooMic v1.0.0
 
-A modern desktop application that enables seamless interaction between Google's Gemini and Microsoft's Copilot AI models, providing a unified interface for AI governance and comparison.
+A modern desktop application that enables seamless interaction between Google's Gemini and Microsoft's Copilot AI models. Built with NW.js for cross-platform compatibility.
 
 ## Features
 
-- **Dual AI Interface**: Seamlessly interact with both Gemini and Copilot AI models
-- **Real-time Communication**: WebSocket-based communication for instant responses
-- **Flexible Message Routing**: Choose to send messages to both AIs or select a specific one
-- **Message Transfer**: Transfer responses between AI models using intuitive arrow buttons
-- **Modern UI**: Clean, responsive interface with dark theme and floating tooltips
-- **Mobile Optimization**: Optimized for iOS devices with touch-friendly controls
-- **Error Handling**: Robust error handling and automatic reconnection
-- **Status Updates**: Real-time connection status and feedback
+- **Dual AI Interface**: Side-by-side chat windows for Gemini and Copilot
+- **Real-time Communication**: WebSocket-based messaging system
+- **Flexible Message Routing**: Send messages to either or both AI models
+- **Message Transfer**: Transfer responses between AI models
+- **Modern UI**: Clean, responsive design with dark mode
+- **Mobile Optimization**: Responsive layout for all screen sizes
+- **Error Handling**: Graceful error handling and status updates
+- **Status Updates**: Real-time connection and message status indicators
 
 ## Prerequisites
 
 - Node.js (v14 or higher)
 - npm (v6 or higher)
-- Google Gemini API Key
-- Azure OpenAI API Key and Endpoint
+- Google Cloud API key for Gemini
+- Azure OpenAI API key for Copilot
 
 ## Installation
 
@@ -33,84 +33,95 @@ A modern desktop application that enables seamless interaction between Google's 
    npm install
    ```
 
-3. Create a `.env` file in the root directory with your API keys:
+3. Configure environment variables:
+   Create a `.env` file in the root directory with:
    ```
    GEMINI_API_KEY=your_gemini_api_key
-   COPILOT_API_KEY=your_azure_openai_api_key
+   AZURE_OPENAI_API_KEY=your_azure_openai_api_key
+   AZURE_OPENAI_ENDPOINT=your_azure_openai_endpoint
    ```
 
 ## Development Setup
 
-1. Start the WebSocket server:
-   ```bash
-   npm run server
-   ```
-
-2. Start the NW.js application:
-   ```bash
-   npm run start
-   ```
-
-3. For development with auto-reload:
+1. Start the development server:
    ```bash
    npm run dev
    ```
 
+2. Run tests:
+   ```bash
+   npm test
+   ```
+
+3. Run linting:
+   ```bash
+   npm run lint
+   ```
+
 ## Usage
 
-1. Launch the application using `npm run start`
-2. Type your message in the GooMic input area
-3. Choose your target AI(s) using the radio buttons:
-   - "Both AIs" to send to both Gemini and Copilot
-   - "Gemini Only" to send only to Gemini
-   - "Copilot Only" to send only to Copilot
-4. Click "Send" or press Enter to send your message
-5. View responses in the respective AI panels
-6. Use the arrow buttons to transfer responses between AIs
+1. Launch the application:
+   ```bash
+   npm run start
+   ```
+
+2. Select the AI model(s) you want to interact with using the checkboxes
+
+3. Type your message in the input field and press Enter or click Send
+
+4. View responses in the respective chat windows
+
+5. Transfer responses between AIs using the transfer buttons
+
+## Technical Details
+
+- Built with NW.js for cross-platform compatibility
+- WebSocket server for real-time communication
+- Modular architecture with separate AI service modules
+- Responsive design with modern CSS
+- Error handling and status updates
+- Clean code structure following best practices
 
 ## Project Structure
 
 ```
 GooMic/
 ├── src/
-│   ├── index.html      # Main application UI
-│   ├── server.js       # WebSocket server
-│   ├── ai-services.js  # AI service integrations
-│   └── test-client.js  # Test client for development
-├── package.json        # Project dependencies and scripts
-└── .env               # Environment variables (create this)
+│   ├── index.html          # Main application UI
+│   ├── server.js           # WebSocket server
+│   ├── ai-services.js      # AI service implementations
+│   └── test-client.js      # Test client implementation
+├── ios/
+│   └── App/
+│       └── App/
+│           └── public/     # iOS-specific files
+├── www/                    # Web-specific files
+├── package.json           # Project configuration
+└── README.md             # Project documentation
 ```
 
-## Technical Details
-
-- **WebSocket Server**: Handles real-time communication between client and AI services
-- **AI Services**: 
-  - Gemini API integration using Google's Generative AI SDK
-  - Azure OpenAI integration for Copilot
-- **UI Framework**: NW.js for cross-platform desktop application
-- **Styling**: Modern CSS with dark theme and responsive design
-
-## AI Services Configuration
+## AI Service Configurations
 
 ### Gemini
-- Model: gemini-2.0-flash
-- API Version: Latest
-- Configuration via GEMINI_API_KEY environment variable
+- Endpoint: `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent`
+- API Version: v1beta
+- Model: gemini-pro
 
-### Azure OpenAI (Copilot)
-- Endpoint: https://goomic.openai.azure.com
-- Model: gpt-4
+### Azure OpenAI
+- Endpoint: `https://your-resource.openai.azure.com/openai/deployments/gpt-4/chat/completions`
 - API Version: 2024-02-15-preview
-- Configuration via COPILOT_API_KEY environment variable
+- Model: gpt-4
 
-## Contributing
+## Version History
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+### v1.0.0 (Current)
+- Initial stable release
+- Complete dual AI interface
+- Real-time WebSocket communication
+- Modern responsive UI
+- Cross-platform compatibility
+- Error handling and status updates
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT License - See LICENSE file for details
