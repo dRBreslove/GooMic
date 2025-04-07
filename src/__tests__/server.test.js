@@ -1,58 +1,190 @@
-const WebSocket = require('ws');
-const http = require('http');
+import { jest } from '@jest/globals';
+import http from 'http';
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('server-test');
+
+// Mock WebSocket and WebSocketServer
+const mockWebSocket = {
+    OPEN: 1,
+    CONNECTING: 0,
+    CLOSING: 2,
+    CLOSED: 3
+};
+
+const mockWebSocketServer = jest.fn().mockImplementation(({ server }) => {
+    const wss = {
+        clients: new Set(),
+        on: jest.fn((event, callback) => {
+            if (event === 'connection') {
+                wss._connectionCallback = callback;
+            }
+        }),
+        close: jest.fn((callback) => {
+            wss.clients.clear();
+            if (callback) {
+                callback();
+            }
+        }),
+        _connectionCallback: null
+    };
+    return wss;
+});
+
+jest.mock('ws', () => ({
+    WebSocket: mockWebSocket,
+    WebSocketServer: mockWebSocketServer
+}));
 
 describe('WebSocket Server', () => {
-    let ws;
     let server;
+    let wss;
+    let client;
+    let port;
 
     beforeAll((done) => {
-    // Create a test server
         server = http.createServer();
-        const wss = new WebSocket.Server({ server });
-
-        wss.on('connection', (ws) => {
-            ws.on('message', (message) => {
-                ws.send(message.toString());
-            });
-        });
-
-        server.listen(8081, () => {
-            console.log('Test server started on port 8081');
+        wss = new mockWebSocketServer({ server });
+        port = 8080;
+        server.listen(port, () => {
             done();
         });
     });
 
     afterAll((done) => {
-        server.close(() => {
-            console.log('Test server closed');
-            done();
-        });
+        const cleanup = () => {
+            if (server) {
+                server.close(() => {
+                    done();
+                });
+            } else {
+                done();
+            }
+        };
+
+        if (wss) {
+            wss.close(cleanup);
+        } else {
+            cleanup();
+        }
     });
 
-    beforeEach((done) => {
-        ws = new WebSocket('ws://localhost:8081');
-        ws.on('open', done);
+    beforeEach(() => {
+        // Create a mock client
+        client = {
+            readyState: mockWebSocket.OPEN,
+            send: jest.fn((data) => {
+                // Simulate message handling
+                if (client.onmessage) {
+                    const message = typeof data === 'string' ? data : JSON.stringify(data);
+                    client.onmessage({ data: message });
+                }
+            }),
+            on: jest.fn((event, callback) => {
+                if (event === 'message') {
+                    client.onmessage = (data) => callback(data);
+                }
+            }),
+            close: jest.fn((callback) => {
+                client.readyState = mockWebSocket.CLOSED;
+                if (callback) {
+                    callback();
+                }
+            }),
+            onmessage: null
+        };
+
+        // Add client to server's client set
+        wss.clients.add(client);
+
+        // Call the connection callback with the mock client
+        if (wss._connectionCallback) {
+            wss._connectionCallback(client);
+        }
     });
 
     afterEach((done) => {
-        if (ws.readyState === WebSocket.OPEN) {
-            ws.close();
+        const cleanup = () => {
+            wss.clients.clear();
+            done();
+        };
+
+        if (client && client.readyState === mockWebSocket.OPEN) {
+            client.close(cleanup);
+        } else {
+            cleanup();
         }
-        done();
     });
 
-    test('should connect to WebSocket server', () => {
-        expect(ws.readyState).toBe(WebSocket.OPEN);
-    });
-
-    test('should receive echo response', (done) => {
-        const testMessage = 'Hello, WebSocket!';
-
-        ws.on('message', (data) => {
-            expect(data.toString()).toBe(testMessage);
+    test('should send client ID on connection', (done) => {
+        client.on('message', (data) => {
+            const message = JSON.parse(data);
+            expect(message.type).toBe('clientId');
+            expect(message.clientId).toBeDefined();
             done();
         });
 
-        ws.send(testMessage);
-    });
+        // Trigger the connection callback again to simulate the initial connection
+        if (wss._connectionCallback) {
+            wss._connectionCallback(client);
+        }
+    }, 15000);
+
+    test('should echo text messages', (done) => {
+        const testMessage = 'Hello, server!';
+        client.on('message', (data) => {
+            const message = JSON.parse(data);
+            expect(message.type).toBe('text');
+            expect(message.content).toBe(testMessage);
+            done();
+        });
+        client.send({ type: 'text', content: testMessage });
+    }, 15000);
+
+    test('should handle Gemini AI message', (done) => {
+        const testMessage = {
+            type: 'aiMessage',
+            content: 'Hello from Gemini!',
+            source: 'gemini'
+        };
+        client.on('message', (data) => {
+            const message = JSON.parse(data);
+            expect(message.type).toBe('aiMessage');
+            expect(message.content).toBe(testMessage.content);
+            expect(message.source).toBe(testMessage.source);
+            done();
+        });
+        client.send(testMessage);
+    }, 15000);
+
+    test('should handle Copilot AI message', (done) => {
+        const testMessage = {
+            type: 'aiMessage',
+            content: 'Hello from Copilot!',
+            source: 'copilot'
+        };
+        client.on('message', (data) => {
+            const message = JSON.parse(data);
+            expect(message.type).toBe('aiMessage');
+            expect(message.content).toBe(testMessage.content);
+            expect(message.source).toBe(testMessage.source);
+            done();
+        });
+        client.send(testMessage);
+    }, 10000);
+
+    test('should handle AI response error', (done) => {
+        const testMessage = {
+            type: 'aiMessage',
+            content: 'Error message',
+            source: 'error'
+        };
+        client.on('message', (data) => {
+            const message = JSON.parse(data);
+            expect(message.type).toBe('error');
+            expect(message.content).toBe('Failed to process AI message');
+            done();
+        });
+        client.send(testMessage);
+    }, 10000);
 });

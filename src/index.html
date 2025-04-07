@@ -81,21 +81,47 @@
             font-size: 14px;
             line-height: 1.4;
             margin: 0;
-            flex-shrink: 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            animation: messageAppear 0.3s ease-out;
         }
 
-        .message.user {
+        .user-message {
             background: #4285F4;
-            color: white;
-            align-self: flex-end;
+            margin-left: auto;
             border-bottom-right-radius: 2px;
         }
 
-        .message.ai {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            align-self: flex-start;
+        .ai-message {
+            background: #1a1a1a;
+            margin-right: auto;
             border-bottom-left-radius: 2px;
+        }
+
+        .ai-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .ai-icon[data-ai="gemini"] {
+            background: linear-gradient(135deg, #4285F4, #34A853);
+        }
+
+        .ai-icon[data-ai="copilot"] {
+            background: linear-gradient(135deg, #0078D4, #00A4EF);
+        }
+
+        .message-text {
+            flex: 1;
         }
 
         .transfer-arrow {
@@ -367,6 +393,17 @@
         .chat-container::-webkit-scrollbar-thumb:hover {
             background: rgba(255, 255, 255, 0.3);
         }
+
+        @keyframes messageAppear {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 <body>
@@ -433,19 +470,16 @@
                 updateStatus('Connected to server');
             };
 
-            ws.onmessage = (event) => {
+            ws.onmessage = function(event) {
                 const data = JSON.parse(event.data);
                 console.log('Received message:', data);
-
+                
                 if (data.type === 'clientId') {
                     clientId = data.id;
-                } else if (data.type === 'ai_response') {
-                    const { ai, response } = data;
-                    if (ai === 'gemini') {
-                        addMessageToChat('geminiChat', response, 'ai');
-                    } else if (ai === 'copilot') {
-                        addMessageToChat('copilotChat', response, 'ai');
-                    }
+                } else if (data.type === 'text') {
+                    // For Gemini messages, add to GooMic column
+                    const targetAi = data.ai === 'gemini' ? 'goomic' : data.ai;
+                    addMessage(data.text, data.isUser, data.ai);
                 }
             };
 
@@ -469,13 +503,34 @@
             setTimeout(() => status.classList.remove('active'), 3000);
         }
 
-        function addMessageToChat(chatId, text, type) {
-            const chat = document.getElementById(chatId);
-            const message = document.createElement('div');
-            message.classList.add('message', type);
-            message.textContent = text;
-            chat.appendChild(message);
-            chat.scrollTop = chat.scrollHeight;
+        function addMessage(text, isUser, ai) {
+            // For Gemini messages, add to GooMic column
+            const targetAi = ai === 'gemini' ? 'goomic' : ai;
+            const chatContainer = document.querySelector(`.chat-container[data-ai="${targetAi}"]`);
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
+            
+            // Add AI icon for AI messages
+            if (!isUser) {
+                const iconSpan = document.createElement('span');
+                iconSpan.className = 'ai-icon';
+                if (ai === 'gemini') {
+                    iconSpan.innerHTML = '🔷'; // Gemini icon (blue diamond)
+                    iconSpan.setAttribute('data-ai', 'gemini');
+                } else {
+                    iconSpan.innerHTML = '🔵'; // Copilot icon (blue circle)
+                    iconSpan.setAttribute('data-ai', 'copilot');
+                }
+                messageDiv.appendChild(iconSpan);
+            }
+            
+            const textSpan = document.createElement('span');
+            textSpan.className = 'message-text';
+            textSpan.textContent = text;
+            messageDiv.appendChild(textSpan);
+            
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
         function sendMessage(ai, text) {

@@ -1,4 +1,7 @@
 const WebSocket = require('ws');
+const { createLogger } = require('./utils/logger');
+
+const logger = createLogger('TestClient');
 
 class WebSocketTestClient {
     constructor (url = 'ws://localhost:8080') {
@@ -13,32 +16,32 @@ class WebSocketTestClient {
             this.ws = new WebSocket(this.url);
 
             this.ws.on('open', () => {
-                console.log('Connected to WebSocket server');
+                logger.info('Connected to WebSocket server');
                 resolve();
             });
 
             this.ws.on('message', (data) => {
                 const message = JSON.parse(data);
-                console.log('\nReceived message:', message);
+                logger.debug('Received message:', message);
 
                 switch (message.type) {
                 case 'clientId':
                     this.clientId = message.id;
-                    console.log('Got client ID:', this.clientId);
+                    logger.info('Got client ID:', this.clientId);
                     break;
                 case 'text':
-                    console.log('AI Response:', message.text);
+                    logger.info('AI Response:', message.text);
                     break;
                 }
             });
 
             this.ws.on('error', (error) => {
-                console.error('WebSocket error:', error);
+                logger.error('WebSocket error:', error);
                 reject(error);
             });
 
             this.ws.on('close', () => {
-                console.log('Disconnected from WebSocket server');
+                logger.info('Disconnected from WebSocket server');
             });
         });
     }
@@ -55,7 +58,7 @@ class WebSocketTestClient {
             ai: aiType,
         };
 
-        console.log(`\nSending message to ${aiType}:`, text);
+        logger.info(`Sending message to ${aiType}:`, text);
         this.ws.send(JSON.stringify(message));
     }
 
@@ -75,7 +78,7 @@ async function runTests () {
         await client.connect();
 
         // Test Gemini
-        console.log('\n=== Testing Gemini ===');
+        logger.info('=== Testing Gemini ===');
         await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for connection
         client.sendMessage('What is the capital of France?', 'gemini');
 
@@ -83,7 +86,7 @@ async function runTests () {
         await new Promise(resolve => setTimeout(resolve, 5000));
 
         // Test Copilot
-        console.log('\n=== Testing Copilot ===');
+        logger.info('=== Testing Copilot ===');
         client.sendMessage('What is the largest planet in our solar system?', 'copilot');
 
         // Wait for response
@@ -91,10 +94,10 @@ async function runTests () {
 
         // Close connection
         client.close();
-        console.log('\nTests completed');
+        logger.info('Tests completed');
 
     } catch (error) {
-        console.error('Test failed:', error);
+        logger.error('Test failed:', error);
         client.close();
     }
 }

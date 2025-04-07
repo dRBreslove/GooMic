@@ -1,15 +1,18 @@
 const WebSocket = require('ws');
 const { v4: uuidv4 } = require('uuid');
 const { getAIResponse } = require('./ai-services');
+const { createLogger } = require('./utils/logger');
 
+const logger = createLogger('WebSocketServer');
 const wss = new WebSocket.Server({ port: 8080 });
-console.log('WebSocket server running on port 8080');
+logger.info('WebSocket server running on port 8080');
 
 const clients = new Map();
 
 wss.on('connection', (ws) => {
     const clientId = uuidv4();
     clients.set(clientId, ws);
+    logger.debug(`Client ${clientId} connected`);
 
     // Send client ID to the new client
     ws.send(JSON.stringify({
@@ -20,35 +23,46 @@ wss.on('connection', (ws) => {
     ws.on('message', async (message) => {
         try {
             const data = JSON.parse(message);
-            console.log('Received message:', data);
+            logger.debug('Received message:', data);
 
             switch (data.type) {
-                case 'text': {
-                    try {
-                        const response = await getAIResponse(data.text, data.ai);
-                        ws.send(JSON.stringify({
-                            type: 'ai_response',
-                            ai: data.ai,
-                            response: response
-                        }));
-                    } catch (error) {
-                        console.error('Error getting AI response:', error);
-                        ws.send(JSON.stringify({
-                            type: 'ai_response',
-                            ai: data.ai,
-                            response: `Error: Failed to get response from ${data.ai}`
-                        }));
-                    }
-                    break;
+            case 'text': {
+                // First send the user's message back to be displayed
+                ws.send(JSON.stringify({
+                    type: 'text',
+                    ai: data.ai,
+                    text: data.text,
+                    isUser: true,
+                }));
+
+                try {
+                    const response = await getAIResponse(data.text, data.ai);
+                    // Then send the AI response
+                    ws.send(JSON.stringify({
+                        type: 'text',
+                        ai: data.ai,
+                        text: response,
+                        isUser: false,
+                    }));
+                } catch (error) {
+                    logger.error('Error getting AI response:', error);
+                    ws.send(JSON.stringify({
+                        type: 'text',
+                        ai: data.ai,
+                        text: `Error: Failed to get response from ${data.ai}`,
+                        isUser: false,
+                    }));
                 }
+                break;
+            }
             }
         } catch (error) {
-            console.error('Error processing message:', error);
+            logger.error('Error processing message:', error);
         }
     });
 
     ws.on('close', () => {
         clients.delete(clientId);
-        console.log(`Client ${clientId} disconnected`);
+        logger.info(`Client ${clientId} disconnected`);
     });
 });

@@ -1,6 +1,9 @@
 const axios = require('axios');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { createLogger } = require('./utils/logger');
 require('dotenv').config();
+
+const logger = createLogger('AIServices');
 
 // Gemini API configuration
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
@@ -14,14 +17,14 @@ const AZURE_API_VERSION = '2024-02-15-preview';
 
 async function getGeminiResponse (prompt) {
     try {
-        console.log('Sending request to Gemini API...');
+        logger.info('Sending request to Gemini API...');
         const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
         const result = await model.generateContent(prompt);
         const response = await result.response;
-        console.log('Got response from Gemini API');
+        logger.info('Got response from Gemini API');
         return response.text();
     } catch (error) {
-        console.error('Gemini API Error Details:', {
+        logger.error('Gemini API Error Details:', {
             message: error.message,
             stack: error.stack,
             response: error.response?.data,
@@ -32,7 +35,7 @@ async function getGeminiResponse (prompt) {
 
 async function getAzureOpenAIResponse (prompt) {
     try {
-        console.log('Sending request to Azure OpenAI API...');
+        logger.info('Sending request to Azure OpenAI API...');
         const response = await axios.post(
             `${AZURE_OPENAI_ENDPOINT}/openai/deployments/${AZURE_DEPLOYMENT_NAME}/chat/completions?api-version=${AZURE_API_VERSION}`,
             {
@@ -47,10 +50,10 @@ async function getAzureOpenAIResponse (prompt) {
                 },
             },
         );
-        console.log('Got response from Azure OpenAI API');
+        logger.info('Got response from Azure OpenAI API');
         return response.data.choices[0].message.content;
     } catch (error) {
-        console.error('Azure OpenAI API Error Details:', {
+        logger.error('Azure OpenAI API Error Details:', {
             message: error.message,
             stack: error.stack,
             response: error.response?.data,
@@ -61,7 +64,7 @@ async function getAzureOpenAIResponse (prompt) {
 
 async function getAIResponse (prompt, aiType) {
     try {
-        console.log(`Getting response from ${aiType} for prompt:`, prompt);
+        logger.debug(`Getting response from ${aiType} for prompt:`, prompt);
         switch (aiType.toLowerCase()) {
         case 'gemini':
             return await getGeminiResponse(prompt);
@@ -71,7 +74,7 @@ async function getAIResponse (prompt, aiType) {
             throw new Error('Unsupported AI type');
         }
     } catch (error) {
-        console.error('AI Service Error:', error);
+        logger.error('AI Service Error:', error);
         return `Error: ${error.message}`;
     }
 }
@@ -79,5 +82,5 @@ async function getAIResponse (prompt, aiType) {
 module.exports = {
     getAIResponse,
     getGeminiResponse,
-    getAzureOpenAIResponse
+    getAzureOpenAIResponse,
 };
