@@ -1,3 +1,4 @@
+’’’
 GooMic/
 ├── src/
 │   ├── index.html          # Main application UI
@@ -11,7 +12,7 @@ GooMic/
 ├── www/                    # Web-specific files
 ├── package.json           # Project configuration
 └── README.md             # Project documentation
-
+’’’
 ## AI Model Integration Details
 
 GooMic is designed to be extensible and support a wide range of AI models.
